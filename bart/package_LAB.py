@@ -119,8 +119,8 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
     MV.append(value)
 
 #-----------------------------------
-def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT", model="broida_simple", Tg=0, Tu=0, a=0, t1=0, t2=0):
-    
+# def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT", model="broida_simple", Tg=0, Tu=0, a=0, t1=0, t2=0):
+def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT"):    
 # """
 # The function "imc_tuning" is only for first and second order systems.
 # :Kp: process gain
@@ -141,13 +141,9 @@ def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT", model=
 # - Td: derivative time
 # The function "imc_tuning" returns the parameteres that you will use in your PID depending on your process parameters
 # """
+    
+    
     if (process == "FOPDT"):
-        if (model == "broida_simple"):
-            Tlag1 = Tg
-            theta = Tu
-        elif (model == "broida_complex"):
-            Tlag1 = 5.5*(t2 - t1)
-            theta = (2.8*t1) - (1.8*t2)
 
         Tc = gamma * Tlag1
         Kc = ((Tlag1 + theta/2) / (Tc + theta/2)) / Kp
@@ -155,27 +151,11 @@ def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT", model=
         Td = (Tlag1*theta) / (2*Tlag1 + theta)
 
     elif (process == "SOPDT"):
-        if (model == "vdG"):
-            Tlag1 = Tg * ((3*a*math.exp(1) - 1) / (1 + a*math.exp(1)))
-            Tlag2 = Tg * ((1 - a*math.exp(1)) / (1 + a*math.exp(1)))
-            theta = Tu - ((Tlag1*Tlag2) / (Tlag1 + 3*Tlag2))
 
         Tc = gamma * Tlag1
         Kc = ((Tlag1 + Tlag2) / (Tc + theta)) / Kp
         Ti = Tlag1 + Tlag2
         Td = (Tlag1*Tlag2) / (Tlag1 + Tlag2)
 
-    # else :
-    # an = Tu / Tg
-    # table = [ [0.0, 1.0], [0.10, 2.72], [0.22, 3.69],[0.32, 4.46],[0.41, 5.12],[0.49, 5.70],[0.57, 6.23] ]
-
-    # for i in range(len(table)):
-    # if ( table[i][0] <= an < table[i+1][0]):
-    # n = i + 1
-    # bn = table[i][1]
-
-    # Tlag1 = Tg / bn
-    # Tuth = an * Tg
-    # theta = Tu - Tuth
     return Kc, Ti, Td
         
