@@ -351,16 +351,16 @@ def Bode(P,omega, Show = True):
         # Gain part
         ax_gain.semilogx(omega,20*np.log10(np.abs(Ps)),label='P(s)')
         ax_gain.semilogx(omega,20*np.log10(np.abs(PGain)),label='Pgain')
-        if P.parameters['theta'] > 0:
-            ax_gain.semilogx(omega,20*np.log10(np.abs(Ptheta)),label='Ptheta(s)')
-        if P.parameters['Tlag1'] > 0:
-            ax_gain.semilogx(omega,20*np.log10(np.abs(PLag1)),label='PLag1(s)')
-        if P.parameters['Tlag2'] > 0:        
-            ax_gain.semilogx(omega,20*np.log10(np.abs(PLag2)),label='PLag2(s)')
-        if P.parameters['Tlead1'] > 0:        
-            ax_gain.semilogx(omega,20*np.log10(np.abs(PLead1)),label='PLead1(s)')
-        if P.parameters['Tlead2'] > 0:    
-            ax_gain.semilogx(omega,20*np.log10(np.abs(PLead2)),label='PLead2(s)')    
+        # if P.parameters['theta'] > 0:
+        #     ax_gain.semilogx(omega,20*np.log10(np.abs(Ptheta)),label='Ptheta(s)')
+        # if P.parameters['Tlag1'] > 0:
+        #     ax_gain.semilogx(omega,20*np.log10(np.abs(PLag1)),label='PLag1(s)')
+        # if P.parameters['Tlag2'] > 0:        
+        #     ax_gain.semilogx(omega,20*np.log10(np.abs(PLag2)),label='PLag2(s)')
+        # if P.parameters['Tlead1'] > 0:        
+        #     ax_gain.semilogx(omega,20*np.log10(np.abs(PLead1)),label='PLead1(s)')
+        # if P.parameters['Tlead2'] > 0:    
+        #     ax_gain.semilogx(omega,20*np.log10(np.abs(PLead2)),label='PLead2(s)')    
         gain_min = np.min(20*np.log10(np.abs(Ps)/5))
         gain_max = np.max(20*np.log10(np.abs(Ps)*5))
         ax_gain.set_xlim([np.min(omega), np.max(omega)])
@@ -372,16 +372,16 @@ def Bode(P,omega, Show = True):
         # Phase part
         ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(Ps)),label='P(s)')
         ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PGain)),label='Pgain')
-        if P.parameters['theta'] > 0:    
-            ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(Ptheta)),label='Ptheta(s)')
-        if P.parameters['Tlag1'] > 0:        
-            ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLag1)),label='PLag1(s)')
-        if P.parameters['Tlag2'] > 0:        
-            ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLag2)),label='PLag2(s)')
-        if P.parameters['Tlead1'] > 0:        
-            ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLead1)),label='PLead1(s)')
-        if P.parameters['Tlead2'] > 0:        
-            ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLead2)),label='PLead2(s)')    
+        # if P.parameters['theta'] > 0:    
+        #     ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(Ptheta)),label='Ptheta(s)')
+        # if P.parameters['Tlag1'] > 0:        
+        #     ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLag1)),label='PLag1(s)')
+        # if P.parameters['Tlag2'] > 0:        
+        #     ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLag2)),label='PLag2(s)')
+        # if P.parameters['Tlead1'] > 0:        
+        #     ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLead1)),label='PLead1(s)')
+        # if P.parameters['Tlead2'] > 0:        
+        #     ax_phase.semilogx(omega, (180/np.pi)*np.unwrap(np.angle(PLead2)),label='PLead2(s)')    
         ax_phase.set_xlim([np.min(omega), np.max(omega)])
         ph_min = np.min((180/np.pi)*np.unwrap(np.angle(Ps))) - 10
         ph_max = np.max((180/np.pi)*np.unwrap(np.angle(Ps))) + 10
