@@ -2,7 +2,7 @@
 
 import math
 import numpy as np
-from package_DBR import Process, Bode
+from package_DBR import *
 import matplotlib.pyplot as plt
 from IPython.display import display, clear_output
 
@@ -49,19 +49,6 @@ def Lead_Lag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
     else:
         PV.append(Kp*MV[-1])
 
-#-----------------------------------        
-class Process:
-    
-    def __init__(self, parameters):
-        
-        self.parameters = parameters
-        self.parameters['Kp'] = parameters['Kp'] if 'Kp' in parameters else 1.0
-        self.parameters['theta'] = parameters['theta'] if 'theta' in parameters else 0.0
-        self.parameters['Tlead1'] = parameters['Tlead1'] if 'Tlead1' in parameters else 0.0
-        self.parameters['Tlead2'] = parameters['Tlead2'] if 'Tlead2' in parameters else 0.0
-        self.parameters['Tlag1'] = parameters['Tlag1'] if 'Tlag1' in parameters else 0.0
-        self.parameters['Tlag2'] = parameters['Tlag2'] if 'Tlag2' in parameters else 0.0
-
 #-----------------------------------         
 class Controller:
     
@@ -72,40 +59,49 @@ class Controller:
         self.parameters['Ti'] = parameters['Ti'] if 'Ti' in parameters else 100.0
         self.parameters['Td'] = parameters['Td'] if 'Td' in parameters else 10.0
         self.parameters['alpha'] = parameters['alpha'] if 'aplha' in parameters else 1.0
-        
+
 #----------------------------------- 
-def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MVP, MVI, MVD, E, ManFF=False, PVInit=0, method='EBD-EBD'):
+def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MVP, MVI, MVD, E, ManFF=False, PVInit=0, method="EBD-EBD"):
 
     """
-    Help on function PID_RT in module package_DBR_Advanced:
+    Help on function PID_RT in module package_LAB:
+
     PID_RT (SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MVP, MVI, MVD, E, ManFF=False, PVInit=@, method='EBD-EBD')
     The function "PID RT"
     needs to be included in a
     "for or while loop"
+    
     SP: SP (or SetPoint) vector
     PV: PV (or Process Value) vector
     Man: Man (or Manual controller mode) vector (True or False)
     MVMan: MVMan (or Manual value for MV) vector
     MVFF: MVFF (or Feedforward) vector
+
     Kc: controller gain
     Ti: integral time constant [s]
     Td: derivative time constant [s]
     alpha: Tfd = alpha*Td where Tfd is the derivative filter time constant [s]
     Ts: sampling period [s]
+
     MVMin: minimum value for MV (used for saturation and anti wind-up)
     MVMax: maximum value for MV (used for saturation and anti wind-up)
+
     MV: MV (or Manipulated Value) vector
+
     MVP: MVP (or Propotional part of MV) vector
     MVI: MVI (or Integral part of MV) vector
     MVD: MVD (or Derivative part of MV) vector
+
     E: E (or control Error) vector
     ManFF: Activated FF in manual mode (optional: default boolean value is False)
     PVInit: Initial value for PV (optional: default value is e): used if PID_RT is ran first in the squence and no value of PV is available yet.
+    
     method: discretisation method (optional: default value is 'EBD')
     EBD-EBD: EBD for integral action and EBD for derivative action
     EBD-TRAP: EBD for integral action and TRAP for derivative action
     TRAP-EBD: TRAP for integral action and EBD for derivative action
     TRAP-TRAP: TRAP for integral action and TRAP for derivative action
+    
     The function "PID_ RT"
     appends new values to the vectors "MV",
     "MVP". "MVI".
@@ -114,47 +110,115 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
     Note that saturation of "MV" within the limits [MVMin MVMax] is implemented with anti wind-up.
     """
     
-    #initialisation of E
+    
+
+    
+    methodI= method.split("-")[0]
+    methodD = method.split("-")[1]
+    
+    # Initialisation of E
     if len(PV) == 0 :
         E.append(SP[-1] - PVInit)
     else:
         E.append(SP[-1] - PV[-1])
+    
+# slide 194
 
-    if Man[-1] == False:
+    #Proportional Action
+    MVP.append(Kc*E[-1])
         
-        #Proportional
-        MVP.append(Kc*E[-1])
-
-        #Integral
-        if len(MVI)==0:
-            MVI.append((Kc*Ts/Ti)*E[-1])
-        else:
-            MVI.append(MVI[-1]+(Kc*Ts/Ti)*E[-1])
-
-        #Derivating
-        Tfd = alpha*Td
-
-        if len(MVD) == 0 and len(E)>1:
-            MVD.append((Kc*Td/(Tfd+Ts))*(E[-1]-E[-2]))
-        elif len(E) == 1:
-            MVD.append(0)
-        else:
-            MVD.append((Tfd/(Tfd+Ts))*MVD[-1]+(Kc*Td/(Tfd+Ts))*(E[-1]-E[-2]))
-
-        MV.append(MVP[-1]+MVI[-1]+MVD[-1])
-
+    #Integral Action
+    if len(MVI) == 0:
+        MVI.append((Kc*Ts/Ti)*E[-1])
     else:
-
-
-        """
-        MVI.append(0)
-        MVP.append(0)
-        MVD.append(0)
-        if len(MVMan)==0:
-            MV.append(0)
+        if methodI == 'TRAP':
+            MVI.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1] + E[-2]))
         else:
-            MV.append(MVMan[-1])
-        """
+            MVI.append(MVI[-1] + (Kc*Ts/Ti)*E[-1])
+                
+                
+    #Derivating Action
+    Tfd = alpha*Td
+    if Td > 0:
+        if len(MVD) ==0:
+            if len(E) ==1:
+                MVD.append((Kc*Td/(Tfd+Ts))*(E[-1]))
+            else:
+                MVD.append((Kc*Td/(Tfd+Ts))*(E[-1]-E[-2]))
+        else:
+            if len(E) == 1:
+                MVD.append((Tfd/(Tfd+Ts))*MVD[-1]+(Kc*Td/(Tfd+Ts))*(E[-1]))
+            else:
+                MVD.append((Tfd/(Tfd+Ts))*MVD[-1]+(Kc*Td/(Tfd+Ts))*(E[-1]-E[-2]))                
+
+
+    #Mode manuel et anti wind_up  
+    #init MVFF
+    if ManFF == True:
+        MVFFi = MVFF[-1]
+    else:
+        MVFFi = 0
+        
+                   
+    if Man[-1]:       
+        if ManFF:
+            MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
+        else:
+            MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1] - MVFFi
+    
+    value = MVP[-1]+MVI[-1]+MVD[-1]+MVFFi
+                   
+    #Min et Max de MV
+    if value >= MVMax:
+        MVI[-1] = MVMax - MVP[-1] - MVD[-1] - MVFFi
+        value = MVMax
+                   
+    if value <= MVMin:
+        MVI[-1] = MVMin - MVP[-1] - MVD[-1] - MVFFi
+        value = MVMin
+    
+    #Update MV
+    MV.append(value)
+
+#-----------------------------------
+def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT"):  
+
+    """
+    The function "imc_tuning" is only for first and second order systems.
+    :Kp: process gain
+    :Tlag1: first (or main) lag time constant [s] used in your process
+    :Tlag2: second lag time constant [s] used in your process
+    :theta: delay [s] used in your process
+    :gamma : constant used to get the closed loop time constant
+    :process: process order (ex : FOPDT first order system wuth delay)
+    :model: broida_simple or broida_complex for FOPDT
+    :Tg:
+    :Tu:
+    :a:
+    :t1: time for 28% of PV (100% being the steady state)
+    :t2: time for 44% of PV
+    :return: imc tuning parameters respectively:
+    - Kc: controller gain
+    - Ti: reset time
+    - Td: derivative time
+    The function "imc_tuning" returns the parameteres that you will use in your PID depending on your process parameters
+    """
+    
+    if (process == "FOPDT"):
+
+        Tc = gamma * Tlag1
+        Kc = ((Tlag1 + theta/2) / (Tc + theta/2)) / Kp
+        Ti = Tlag1 + theta/2
+        Td = (Tlag1*theta) / (2*Tlag1 + theta)
+
+    elif (process == "SOPDT"):
+
+        Tc = gamma * Tlag1
+        Kc = ((Tlag1 + Tlag2) / (Tc + theta)) / Kp
+        Ti = Tlag1 + Tlag2
+        Td = (Tlag1*Tlag2) / (Tlag1 + Tlag2)
+
+    return Kc, Ti, Td
 
 #----------------------------------- 
 
