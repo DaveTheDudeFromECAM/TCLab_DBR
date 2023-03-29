@@ -1,3 +1,5 @@
+# Verified version 
+
 import numpy as np
 
 import matplotlib.pyplot as plt
@@ -42,7 +44,7 @@ def SelectPath_RT(path,time,signal):
 def Delay_RT(MV,theta,Ts,MV_Delay,MVInit=0):
     
     """
-    The function "Delay_RT" needs to be included in a "for or while loop".
+    The function "Delay Real Time" needs to be included in a "for or while loop".
     
     :MV: input vector
     :theta: delay [s]
@@ -66,8 +68,8 @@ def Delay_RT(MV,theta,Ts,MV_Delay,MVInit=0):
 def FO_RT(MV,Kp,T,Ts,PV,PVInit=0,method='EBD'):
     
     """
-    The function "FO_RT" needs to be included in a "for or while loop".
-    
+    The function "First order rael time needs to be included in a "for or while loop".
+     
     :MV: input vector
     :Kp: process gain
     :T: lag time constant [s]

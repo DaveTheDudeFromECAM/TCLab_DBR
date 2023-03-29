@@ -1,4 +1,4 @@
-#FINAL VERSION
+# Verified version
 
 import math
 import numpy as np
@@ -8,9 +8,8 @@ from IPython.display import display, clear_output
 
 #-----------------------------------        
 def Lead_Lag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
-    
     """
-    The function "Lid-lag_RT" needs to be included in a "for or while loop".
+    The function "Lead-lag_RT" needs to be included in a "for or while loop".
     
     :MV: input vector
     :Kp: process gain
@@ -26,7 +25,7 @@ def Lead_Lag_RT(MV, Kp, Tlead, Tlag, Ts, PV, PVInit=0, method='EBD'):
         EFD: Euler Forward difference
         TRAP: Trapezoïdal method
     
-    The function "FO_RT" appends a value to the output vector "PV".
+    The function "Lead-lag_RT" appends a value to the output vector "PV".
     The appended value is obtained from a recurrent equation that depends on the discretisation method.
     """    
     
@@ -62,7 +61,6 @@ class Controller:
 
 #----------------------------------- 
 def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MVP, MVI, MVD, E, ManFF=False, PVInit=0, method="EBD-EBD"):
-
     """
     Help on function PID_RT in module package_LAB:
 
@@ -95,13 +93,13 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
     E: E (or control Error) vector
     ManFF: Activated FF in manual mode (optional: default boolean value is False)
     PVInit: Initial value for PV (optional: default value is e): used if PID_RT is ran first in the squence and no value of PV is available yet.
-    
+
     method: discretisation method (optional: default value is 'EBD')
     EBD-EBD: EBD for integral action and EBD for derivative action
     EBD-TRAP: EBD for integral action and TRAP for derivative action
     TRAP-EBD: TRAP for integral action and EBD for derivative action
     TRAP-TRAP: TRAP for integral action and TRAP for derivative action
-    
+
     The function "PID_ RT"
     appends new values to the vectors "MV",
     "MVP". "MVI".
@@ -109,9 +107,6 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
     The appended values are based on the PID algorithm, the controller mode, and feedforward.
     Note that saturation of "MV" within the limits [MVMin MVMax] is implemented with anti wind-up.
     """
-    
-    
-
     
     methodI= method.split("-")[0]
     methodD = method.split("-")[1]
@@ -121,23 +116,22 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
         E.append(SP[-1] - PVInit)
     else:
         E.append(SP[-1] - PV[-1])
-    
-# slide 194
 
-    #Proportional Action
+    # Proportionnal action -> slide 194
     MVP.append(Kc*E[-1])
         
-    #Integral Action
+    # Integral action
     if len(MVI) == 0:
         MVI.append((Kc*Ts/Ti)*E[-1])
     else:
         if methodI == 'TRAP':
             MVI.append(MVI[-1] + (0.5*Kc*Ts/Ti)*(E[-1] + E[-2]))
+        elif methodI == 'EBD':
+            MVI.append(MVI[-1] + (Kc*Ts/Ti)*E[-1])
         else:
             MVI.append(MVI[-1] + (Kc*Ts/Ti)*E[-1])
                 
-                
-    #Derivating Action
+    # Derivative action 
     Tfd = alpha*Td
     if Td > 0:
         if len(MVD) ==0:
@@ -151,15 +145,13 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
             else:
                 MVD.append((Tfd/(Tfd+Ts))*MVD[-1]+(Kc*Td/(Tfd+Ts))*(E[-1]-E[-2]))                
 
-
-    #Mode manuel et anti wind_up  
-    #init MVFF
+    # Feed forward
     if ManFF == True:
         MVFFi = MVFF[-1]
     else:
         MVFFi = 0
-        
-                   
+
+     # Manual mode & anti wind-up                   
     if Man[-1]:       
         if ManFF:
             MVI[-1] = MVMan[-1] - MVP[-1] - MVD[-1]
@@ -168,21 +160,19 @@ def PID_RT(SP, PV, Man, MVMan, MVFF, Kc, Ti, Td, alpha, Ts, MVMin, MVMax, MV, MV
     
     value = MVP[-1]+MVI[-1]+MVD[-1]+MVFFi
                    
-    #Min et Max de MV
+    # Min et Max de MV
     if value >= MVMax:
         MVI[-1] = MVMax - MVP[-1] - MVD[-1] - MVFFi
-        value = MVMax
+
                    
     if value <= MVMin:
         MVI[-1] = MVMin - MVP[-1] - MVD[-1] - MVFFi
-        value = MVMin
     
-    #Update MV
-    MV.append(value)
+    # Final MV value -> pid output
+    MV.append(MVP[-1]+MVI[-1]+MVD[-1]+MVFFi)
 
 #-----------------------------------
 def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT"):  
-
     """
     The function "imc_tuning" is only for first and second order systems.
     :Kp: process gain
@@ -205,14 +195,12 @@ def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT"):
     """
     
     if (process == "FOPDT"):
-
         Tc = gamma * Tlag1
         Kc = ((Tlag1 + theta/2) / (Tc + theta/2)) / Kp
         Ti = Tlag1 + theta/2
         Td = (Tlag1*theta) / (2*Tlag1 + theta)
 
     elif (process == "SOPDT"):
-
         Tc = gamma * Tlag1
         Kc = ((Tlag1 + Tlag2) / (Tc + theta)) / Kp
         Ti = Tlag1 + Tlag2
@@ -221,7 +209,6 @@ def IMC_tuning(Kp, Tlag1 = 0, Tlag2=0, theta=0, gamma=0, process="FOPDT"):
     return Kc, Ti, Td
 
 #----------------------------------- 
-
 def StabilityMargins(P: Process, C: Controller, omega):
     """
     The function "stability_margins" needs to have 2 processes object in paramaters.
@@ -232,7 +219,8 @@ def StabilityMargins(P: Process, C: Controller, omega):
         
     The function "stability_margins" generates the bodes plots of the Loop gain and gives the phase and gain margins.
     """    
-    
+
+    # Process * Controller -> P + C
     L = Process({})
     L.parameters['Kp'] = P.parameters['Kp']  + C.parameters['Kc'] 
     L.parameters['Tlag1'] = P.parameters['Tlag1']  + C.parameters['Ti'] 
@@ -248,9 +236,8 @@ def StabilityMargins(P: Process, C: Controller, omega):
         if gain_values[i] > 0 and gain_values[i + 1] < 0: 
             x_gain = i
             y_gain = gain_values[i]
-            Wc = round(omega[i],2)
+            Wc = round(omega[i],2) #?
             phase_margin = round(abs(phase_values[i] + 180),2)
-
     
     for i in range(len(phase_values)):
         if phase_values[i] > -180 and phase_values[i + 1] < -180:     
@@ -258,7 +245,6 @@ def StabilityMargins(P: Process, C: Controller, omega):
             y_phase = phase_values[i]
             Wu = round(omega[i],2)
             gain_margin = round(abs(gain_values[i]), 2)
-    
         
     fig, (ax_gain, ax_phase) = plt.subplots(2,1)
     fig.set_figheight(12)
@@ -271,8 +257,6 @@ def StabilityMargins(P: Process, C: Controller, omega):
     gain_max = np.max(20*np.log10(np.abs(Ls)*5))
     ax_gain.vlines(omega[x_phase],gain_min,gain_values[x_phase], color = 'r', linestyle = '--')
     ax_gain.vlines(omega[x_gain],gain_min,0, color = 'blue', linestyle = '--')
-    
-    #ax_gain.vlines(omega[x_phase],gain_values[x_phase],0, color = 'g')
     
     ax_gain.annotate(
     '', xy=(omega[x_phase], gain_values[x_phase]), xycoords='data',
@@ -298,7 +282,6 @@ def StabilityMargins(P: Process, C: Controller, omega):
     ph_max = np.max((180/np.pi)*np.unwrap(np.angle(Ls))) + 10
     ax_phase.vlines(omega[x_gain],phase_values[x_gain] ,ph_max, color = 'blue', linestyle = '--')
     ax_phase.vlines(omega[x_phase],-180,ph_max,color = 'r', linestyle = '--')
-    #ax_phase.vlines(omega[x_gain],-180 ,phase_values[x_gain], color = 'g')
     
     ax_phase.annotate(
     '', xy=(omega[x_gain], -180), xycoords='data',
